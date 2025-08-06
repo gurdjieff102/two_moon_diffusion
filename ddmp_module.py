@@ -1,28 +1,15 @@
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_moons
+from models import MLPDenoiser, ResidualMLPDenoiser
+from pytorch_lightning.loggers import TensorBoardLogger
 
 def sample_two_moons(n_samples=2000):
     data, _ = make_moons(n_samples=n_samples, noise=0.05)
     return torch.tensor(data, dtype=torch.float32)
 
-class MLPDenoiser(nn.Module):
-    def __init__(self, input_dim=2, hidden_dim=128):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(input_dim + 1, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, input_dim),
-        )
-    def forward(self, x, t):
-        t_emb = t.unsqueeze(1)  # [batch, 1]
-        x_in = torch.cat([x, t_emb], dim=1)  # [batch, 3]
-        return self.net(x_in)
 
 def ddpm_schedule(start, end, timesteps=100):
     betas = torch.linspace(start, end, timesteps)
@@ -42,7 +29,7 @@ def ddpm_schedule(start, end, timesteps=100):
 class DiffusionModel(pl.LightningModule):
     def __init__(self, timesteps=100, lr=1e-3, batch_size=1024):
         super().__init__()
-        self.model = MLPDenoiser()
+        self.model = ResidualMLPDenoiser()
         self.timesteps = timesteps
         self.lr = lr
         self.batch_size = batch_size
@@ -128,9 +115,16 @@ if __name__ == "__main__":
     pl.seed_everything(0)
     model = DiffusionModel(timesteps=100, lr=1e-3)
 
+    logger = TensorBoardLogger(
+        save_dir="logs",
+        name="experiment",
+        version='residual_mlp'
+    )
     trainer = pl.Trainer(max_epochs=2000,
                         accelerator='gpu' if torch.cuda.is_available else 'cpu',
-                        log_every_n_steps=10)
+                        log_every_n_steps=10,
+                        logger=logger)
+
     trainer.fit(model)
 
     real_data = sample_two_moons(1000)
