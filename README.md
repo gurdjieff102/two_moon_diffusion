@@ -51,9 +51,11 @@ We used the Maximum Mean Discrepancy (MMD) to quantify the similarity between ge
 
 ## Results
 - Training loss converged steadily (plot attached).
-- using basic MLP network: MMD between real and generated samples: 0.003412
-- using residual MLP network: MMD between real and generated samples: 0.007543
-- from the train loss diagram it can be seen with more complex network like residual MLP to basic MLP it showed a better performance.
+- using basic residual MLP network and scheduler_type linear: MMD between real and generated samples: 0.003412
+- using basic residual MLP network and scheduler_type cosine: MMD between real and generated samples: 0.001054
+- using basic MLP network and scheduler_type linear: MMD between real and generated samples: 0.007543
+- using basic MLP network and scheduler_type cosine: MMD between real and generated samples: 0.03199
+- from the train loss diagram it can be seen with more complex network like residual MLP to basic MLP it showed a better performance and faster to converge, with cosine schedule type has better performance and faster to converge.
 ![training loss](tensorboard.png)
 - The generated samples visually resemble the real Two Moons data.
 - MLP network
@@ -61,6 +63,7 @@ We used the Maximum Mean Discrepancy (MMD) to quantify the similarity between ge
 
 - Residual MLP network
 ![residual_mlp](two_moons_residual_mlp.png)
+
 
 
 
